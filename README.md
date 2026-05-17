@@ -1,4 +1,4 @@
-# Kairos-Core
+# Kairos-Core-ESP32
 
 Dual-core firmware for the **Paperd.ink Classic** (ESP32-WROOM, 400×300 B/W e-paper).
 Scripts written in JavaScript are executed on the device via a built-in code editor,
