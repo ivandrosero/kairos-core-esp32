@@ -1,0 +1,11 @@
+{
+  "name": "elk",
+  "version": "3.0.0",
+  "description": "Tiny embeddable JavaScript engine for microcontrollers",
+  "license": "AGPL-3.0-or-later",
+  "frameworks": "*",
+  "platforms": "*",
+  "build": {
+    "srcFilter": ["+<elk.c>"]
+  }
+}

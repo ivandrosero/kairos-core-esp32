@@ -1,0 +1,7 @@
+{
+  "name": "GxEPD2",
+  "version": "1.6.9",
+  "build": {
+    "srcFilter": ["+<*>", "+<epd/*>"]
+  }
+}
