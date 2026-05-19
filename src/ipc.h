@@ -41,41 +41,18 @@ struct FetchResponse {
     uint32_t bodyLen;
 };
 
-// ─── MQTT IPC ───────────────────────────────────────────────────────────────
-static constexpr size_t MQTT_TOPIC_MAX   = 128;
-static constexpr size_t MQTT_PAYLOAD_MAX = 1024;
 
-enum MqttCmdType : uint8_t {
-    MQTT_CMD_PUBLISH     = 0,
-    MQTT_CMD_SUBSCRIBE   = 1,
-    MQTT_CMD_UNSUBSCRIBE = 2,
-};
-
-struct MqttCommand {
-    MqttCmdType type;
-    char        topic[MQTT_TOPIC_MAX];
-    char        payload[MQTT_PAYLOAD_MAX];
-    uint32_t    payloadLen;
-};
-
-struct MqttMessage {
-    char     topic[MQTT_TOPIC_MAX];
-    char     payload[MQTT_PAYLOAD_MAX];
-    uint32_t payloadLen;
-};
 
 // ─── Queue handles (created in main.cpp) ────────────────────────────────────
 extern QueueHandle_t g_scriptQueue;      // ScriptJob*     C0/WS/MQTT → C1
 extern QueueHandle_t g_fetchReqQueue;    // FetchRequest*  C1 → C0
 extern QueueHandle_t g_fetchRspQueue;    // FetchResponse* C0 → C1
-extern QueueHandle_t g_mqttInQueue;      // MqttMessage*   C0 → C1
-extern QueueHandle_t g_mqttOutQueue;     // MqttCommand*   C1 → C0
+
 
 // Queue depths
 static constexpr int SCRIPT_QUEUE_DEPTH    = 4;
 static constexpr int FETCH_QUEUE_DEPTH     = 2;
-static constexpr int MQTT_IN_QUEUE_DEPTH   = 8;
-static constexpr int MQTT_OUT_QUEUE_DEPTH  = 4;
+
 
 // Timeout for http.get/post blocking wait (ms)
 // Must exceed fetch_worker HTTP timeout (connect 8s + read 12s = 20s)

@@ -2,8 +2,7 @@
 
 Dual-core firmware for the **Paperd.ink Classic** (ESP32-WROOM, 400×300 B/W e-paper).
 Scripts written in JavaScript are executed on the device via a built-in code editor,
-HTTP API, WebSocket, or MQTT — with full access to the e-paper display, HTTP client,
-and MQTT pub/sub from script code.
+
 
 Multiple Kairos devices on the same network discover each other automatically via
 ESP-NOW and form a mesh, allowing scripts to be run or saved to any peer from a
@@ -15,9 +14,8 @@ single browser tab.
 
 ## Architecture
 
-| Core | Role | Tasks |
 |------|------|-------|
-| **Core 0** | Network | WiFi/LWIP, HTTP server, WebSocket client, HTTP fetch worker, MQTT client |
+| **Core 0** | Network | WiFi/LWIP, HTTP server, WebSocket client, HTTP fetch worker |
 | **Core 1** | Engine | Scheduler, Elk JS interpreter, e-paper display, SD/LittleFS |
 
 Cores communicate exclusively through FreeRTOS pointer queues — no shared mutable
@@ -30,8 +28,7 @@ state crosses the core boundary.
 | `g_scriptQueue` | C0 → C1 | `ScriptJob*` | Execute JS code |
 | `g_fetchReqQueue` | C1 → C0 | `FetchRequest*` | HTTP GET/POST request |
 | `g_fetchRspQueue` | C0 → C1 | `FetchResponse*` | HTTP response body |
-| `g_mqttInQueue` | C0 → C1 | `MqttMessage*` | Incoming MQTT messages |
-| `g_mqttOutQueue` | C1 → C0 | `MqttCommand*` | Outgoing publish/subscribe |
+
 
 All queued items are heap-allocated by the sender and freed by the receiver.
 
@@ -49,7 +46,7 @@ cause of the "display one update behind" bug).
 5. ESP-NOW mesh discovery
 6. Create IPC queues
 7. Launch Core 1 task: **Scheduler** (Elk JS + cron)
-8. Launch Core 0 tasks: **WebAPI**, **Fetch Worker**, **WS Client**, **MQTT Client**
+8. Launch Core 0 tasks: **WebAPI**, **Fetch Worker**, **WS Client**
 
 ---
 
@@ -115,7 +112,7 @@ External dependencies (Blockly, CodeMirror) are loaded from CDN.
 |-----|-------------|
 | **Code Editor** | CodeMirror-based JS editor with syntax highlighting. Default tab on load. Left sidebar shows mesh devices with live clocks; right panel shows the Elk JS API reference. |
 | **Blockly** | Visual block-based editor. Generates Elk JS in a preview pane. Use "Code ▶ Editor" to copy generated code to the Code Editor. |
-| **Settings** | Device name, NTP, WebSocket, MQTT configuration. Shows live device status (IP, heap, uptime, RSSI, time). |
+| **Settings** | Device name, NTP, WebSocket configuration. Shows live device status (IP, heap, uptime, RSSI, time). |
 
 ### Toolbar buttons
 
@@ -228,20 +225,7 @@ Date.format("%H:%M")      // strftime formatting → "21:55"
 Date.format("%Y-%m-%d")   // → "2026-05-13"
 ```
 
-### MQTT
 
-```js
-mqtt.publish("sensors/temp", "23.5");
-mqtt.subscribe("commands/#");
-
-let msg = mqtt.receive();   // non-blocking
-// msg = {topic: "commands/run", payload: "..."} or "" if empty
-
-let ok = mqtt.connected();  // 1 or 0
-```
-
-The MQTT client auto-subscribes to `{prefix}/{device_name}/#` on connect.
-Messages on `.../exec` are automatically executed as scripts.
 
 ### System
 
@@ -351,10 +335,7 @@ Settings tab in the web editor.
 | `tz_info` | `CET-1CEST,M3.5.0,M10.5.0/3` | POSIX timezone string |
 | `ws_enabled` | `false` | Connect to remote WebSocket server |
 | `ws_host` / `ws_port` / `ws_path` / `ws_ssl` | — | WebSocket server details |
-| `mqtt_enabled` | `false` | Connect to MQTT broker |
-| `mqtt_broker` / `mqtt_port` | — / `1883` | MQTT broker address |
-| `mqtt_user` / `mqtt_pass` | — | MQTT credentials (optional) |
-| `mqtt_topic_prefix` | `kairos` | Base topic prefix |
+
 
 WiFi credentials are set in `src/secrets.h` (not persisted to config).
 
@@ -374,7 +355,7 @@ src/
 ├── web_api.cpp/.h        Core 0 HTTP server: all REST routes
 ├── fetch_worker.cpp/.h   Core 0 task: dequeue HTTP requests from Elk, execute
 ├── ws_client.cpp/.h      WebSocket client (optional remote server)
-├── mqtt_client.cpp/.h    MQTT client (optional broker)
+
 ├── mesh.cpp/.h           ESP-NOW peer discovery and mesh peer list
 ├── script_store.cpp/.h   LittleFS script storage (code + metadata)
 ├── ipc.h                 IPC structs and queue declarations
@@ -420,7 +401,7 @@ pio device monitor
 |---------|--------|
 | Elk 3.0.0 | `lib/elk/` (vendored) |
 | GxEPD2 | `lib/GxEPD2/` (vendored) |
-| PubSubClient | `lib/PubSubClient/` (vendored) |
+
 | Adafruit GFX Library | PlatformIO registry |
 | ArduinoJson 7.x | PlatformIO registry |
 | WebSockets 2.x | PlatformIO registry |

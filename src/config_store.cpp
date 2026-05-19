@@ -23,12 +23,7 @@ void configInit() {
     cfg.device_name = "kairos-001";
     cfg.ntp_server  = "ch.pool.ntp.org";
     cfg.tz_info     = "CET-1CEST,M3.5.0,M10.5.0/3";
-    cfg.mqtt_enabled      = false;
-    cfg.mqtt_broker       = "";
-    cfg.mqtt_port         = 1883;
-    cfg.mqtt_user         = "";
-    cfg.mqtt_pass         = "";
-    cfg.mqtt_topic_prefix = "kairos";
+
 
     // Try loading from file
     if (LittleFS.exists(CONFIG_FILE_PATH)) {
@@ -46,12 +41,7 @@ void configInit() {
                 if (doc["device_name"].is<const char*>()) cfg.device_name = doc["device_name"].as<String>();
                 if (doc["ntp_server"].is<const char*>()) cfg.ntp_server = doc["ntp_server"].as<String>();
                 if (doc["tz_info"].is<const char*>()) cfg.tz_info = doc["tz_info"].as<String>();
-                if (doc["mqtt_enabled"].is<bool>())         cfg.mqtt_enabled      = doc["mqtt_enabled"];
-                if (doc["mqtt_broker"].is<const char*>())   cfg.mqtt_broker       = doc["mqtt_broker"].as<String>();
-                if (doc["mqtt_port"].is<int>())             cfg.mqtt_port         = doc["mqtt_port"];
-                if (doc["mqtt_user"].is<const char*>())     cfg.mqtt_user         = doc["mqtt_user"].as<String>();
-                if (doc["mqtt_pass"].is<const char*>())     cfg.mqtt_pass         = doc["mqtt_pass"].as<String>();
-                if (doc["mqtt_topic_prefix"].is<const char*>()) cfg.mqtt_topic_prefix = doc["mqtt_topic_prefix"].as<String>();
+
                 DBG("cfg", "Loaded config from %s", CONFIG_FILE_PATH);
             }
             f.close();
@@ -85,12 +75,7 @@ bool configSave() {
     doc["device_name"] = cfg.device_name;
     doc["ntp_server"] = cfg.ntp_server;
     doc["tz_info"] = cfg.tz_info;
-    doc["mqtt_enabled"]      = cfg.mqtt_enabled;
-    doc["mqtt_broker"]       = cfg.mqtt_broker;
-    doc["mqtt_port"]         = cfg.mqtt_port;
-    doc["mqtt_user"]         = cfg.mqtt_user;
-    doc["mqtt_pass"]         = cfg.mqtt_pass;
-    doc["mqtt_topic_prefix"] = cfg.mqtt_topic_prefix;
+
 
     File f = LittleFS.open(CONFIG_FILE_PATH, "w");
     if (!f) {
@@ -115,12 +100,7 @@ String configToJson(bool maskPasswords) {
     doc["device_name"] = cfg.device_name;
     doc["ntp_server"] = cfg.ntp_server;
     doc["tz_info"] = cfg.tz_info;
-    doc["mqtt_enabled"]      = cfg.mqtt_enabled;
-    doc["mqtt_broker"]       = cfg.mqtt_broker;
-    doc["mqtt_port"]         = cfg.mqtt_port;
-    doc["mqtt_user"]         = maskPasswords ? "********" : cfg.mqtt_user;
-    doc["mqtt_pass"]         = maskPasswords ? "********" : cfg.mqtt_pass;
-    doc["mqtt_topic_prefix"] = cfg.mqtt_topic_prefix;
+
 
     String out;
     serializeJson(doc, out);
@@ -143,12 +123,7 @@ bool configMergeJson(const String& json) {
     if (doc["device_name"].is<const char*>()) cfg.device_name = doc["device_name"].as<String>();
     if (doc["ntp_server"].is<const char*>())  cfg.ntp_server  = doc["ntp_server"].as<String>();
     if (doc["tz_info"].is<const char*>())      cfg.tz_info     = doc["tz_info"].as<String>();
-    if (doc["mqtt_enabled"].is<bool>())         cfg.mqtt_enabled      = doc["mqtt_enabled"];
-    if (doc["mqtt_broker"].is<const char*>())   cfg.mqtt_broker       = doc["mqtt_broker"].as<String>();
-    if (doc["mqtt_port"].is<int>())             cfg.mqtt_port         = doc["mqtt_port"];
-    if (doc["mqtt_user"].is<const char*>())     cfg.mqtt_user         = doc["mqtt_user"].as<String>();
-    if (doc["mqtt_pass"].is<const char*>())     cfg.mqtt_pass         = doc["mqtt_pass"].as<String>();
-    if (doc["mqtt_topic_prefix"].is<const char*>()) cfg.mqtt_topic_prefix = doc["mqtt_topic_prefix"].as<String>();
+
 
     return configSave();
 }

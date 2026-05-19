@@ -20,7 +20,7 @@
 #include "web_api.h"
 #include "ws_client.h"
 #include "fetch_worker.h"
-#include "mqtt_client.h"
+
 #include "mesh.h"
 #include "script_store.h"
 
@@ -28,15 +28,13 @@
 QueueHandle_t g_scriptQueue   = nullptr;
 QueueHandle_t g_fetchReqQueue = nullptr;
 QueueHandle_t g_fetchRspQueue = nullptr;
-QueueHandle_t g_mqttInQueue   = nullptr;
-QueueHandle_t g_mqttOutQueue  = nullptr;
 
 // ─── Task handles ───────────────────────────────────────────────────────────
 static TaskHandle_t schedulerTaskHandle   = nullptr;
 static TaskHandle_t webApiTaskHandle      = nullptr;
 static TaskHandle_t wsClientTaskHandle    = nullptr;
 static TaskHandle_t fetchWorkerTaskHandle = nullptr;
-static TaskHandle_t mqttClientTaskHandle  = nullptr;
+
 
 static constexpr const char* kSetupApSsid = "kairos-ink";
 static constexpr uint32_t kSetupHoldMs = 2000;
@@ -179,11 +177,8 @@ void setup() {
     g_scriptQueue   = xQueueCreate(SCRIPT_QUEUE_DEPTH,   sizeof(ScriptJob*));
     g_fetchReqQueue = xQueueCreate(FETCH_QUEUE_DEPTH,    sizeof(FetchRequest*));
     g_fetchRspQueue = xQueueCreate(FETCH_QUEUE_DEPTH,    sizeof(FetchResponse*));
-    g_mqttInQueue   = xQueueCreate(MQTT_IN_QUEUE_DEPTH,  sizeof(MqttMessage*));
-    g_mqttOutQueue  = xQueueCreate(MQTT_OUT_QUEUE_DEPTH, sizeof(MqttCommand*));
 
-    if (!g_scriptQueue || !g_fetchReqQueue || !g_fetchRspQueue
-        || !g_mqttInQueue || !g_mqttOutQueue) {
+    if (!g_scriptQueue || !g_fetchReqQueue || !g_fetchRspQueue ) {
         DBG("ipc", "Failed to create IPC queues!");
         displayText("FATAL: Queue creation\nfailed!");
         return;
@@ -232,17 +227,6 @@ void setup() {
             );
             if (rc != pdPASS) {
                 DBG("boot", "Failed to start fetch worker!");
-            }
-
-            // ── Start MQTT client on Core 0 (if configured) ────────────
-            if (cfg.mqtt_enabled && cfg.mqtt_broker.length() > 0) {
-                rc = xTaskCreatePinnedToCore(
-                    mqttClientTask, "mqtt", 8192, nullptr, 1,
-                    &mqttClientTaskHandle, 0  // Core 0
-                );
-                if (rc != pdPASS) {
-                    DBG("boot", "Failed to start MQTT client task!");
-                }
             }
         }
     }

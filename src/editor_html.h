@@ -189,13 +189,7 @@ display.update();
           <li><code>http.get(url)</code> — {status, body}</li>
           <li><code>http.post(url, contentType, body)</code></li>
         </ul>
-        <h4>MQTT</h4>
-        <ul>
-          <li><code>mqtt.publish(topic, payload)</code></li>
-          <li><code>mqtt.subscribe(topic)</code></li>
-          <li><code>mqtt.receive()</code> — {topic, payload} or ""</li>
-          <li><code>mqtt.connected()</code> — 1 or 0</li>
-        </ul>
+
         <h4>Date/Time</h4>
         <ul>
           <li><code>Date.now()</code> — epoch seconds</li>
@@ -262,31 +256,7 @@ display.update();
         <label>Timezone (POSIX TZ string)</label>
         <input type="text" id="cfg-tz-info" placeholder="EST5EDT,M3.2.0,M11.1.0" />
       </div>
-      <h3>MQTT Client</h3>
-      <div class="field checkbox">
-        <input type="checkbox" id="cfg-mqtt-enabled"/>
-        <label for="cfg-mqtt-enabled">Enable MQTT client</label>
-      </div>
-      <div class="field">
-        <label>MQTT Broker</label>
-        <input type="text" id="cfg-mqtt-broker" placeholder="mqtt.example.com"/>
-      </div>
-      <div class="field">
-        <label>MQTT Port</label>
-        <input type="number" id="cfg-mqtt-port" value="1883"/>
-      </div>
-      <div class="field">
-        <label>MQTT Username</label>
-        <input type="text" id="cfg-mqtt-user" placeholder="(optional)"/>
-      </div>
-      <div class="field">
-        <label>MQTT Password</label>
-        <input type="password" id="cfg-mqtt-pass" placeholder="(optional)"/>
-      </div>
-      <div class="field">
-        <label>MQTT Topic Prefix</label>
-        <input type="text" id="cfg-mqtt-prefix" placeholder="kairos"/>
-      </div>
+
       <button class="primary" id="btn-cfg-save">Save &amp; Apply</button>
       <span id="cfg-status" class="status info" style="margin-left:12px;"></span>
       <div class="status-info" id="device-status">
@@ -295,7 +265,7 @@ display.update();
         <div id="st-heap">Heap: —</div>
         <div id="st-uptime">Uptime: —</div>
         <div id="st-ws">WS Client: —</div>
-        <div id="st-mqtt">MQTT: —</div>
+
         <div id="st-rssi">WiFi RSSI: —</div>
         <div id="st-time">Device Time: —</div>
       </div>
@@ -883,12 +853,7 @@ display.update();
       document.getElementById('cfg-ws-ssl').checked = res.data.ws_ssl !== false;
       document.getElementById('cfg-ntp-server').value = res.data.ntp_server || '';
       document.getElementById('cfg-tz-info').value = res.data.tz_info || '';
-      document.getElementById('cfg-mqtt-enabled').checked = !!res.data.mqtt_enabled;
-      document.getElementById('cfg-mqtt-broker').value = res.data.mqtt_broker || '';
-      document.getElementById('cfg-mqtt-port').value = res.data.mqtt_port || 1883;
-      document.getElementById('cfg-mqtt-user').value = '';
-      document.getElementById('cfg-mqtt-pass').value = '';
-      document.getElementById('cfg-mqtt-prefix').value = res.data.mqtt_topic_prefix || 'kairos';
+
     }
     var st = await api('GET', '/api/status');
     if (st.status === 200) {
@@ -896,7 +861,7 @@ display.update();
       document.getElementById('st-heap').textContent = 'Heap: ' + (st.data.heap_free || '?') + ' bytes';
       document.getElementById('st-uptime').textContent = 'Uptime: ' + Math.round((st.data.uptime_ms || 0) / 1000) + 's';
       document.getElementById('st-ws').textContent = 'WS Client: ' + (st.data.ws_connected ? 'connected' : 'disconnected');
-      document.getElementById('st-mqtt').textContent = 'MQTT: ' + (st.data.mqtt_connected ? 'connected' : 'disconnected');
+
       document.getElementById('st-rssi').textContent = 'WiFi RSSI: ' + (st.data.wifi_rssi || '?') + ' dBm';
       document.getElementById('st-time').textContent = 'Device Time: ' + (st.data.time ? st.data.date + ' ' + st.data.time : 'not synced');
     }

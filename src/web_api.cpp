@@ -18,7 +18,6 @@
 #include "elk_engine.h"
 #include "config_store.h"
 #include "ws_client.h"
-#include "mqtt_client.h"
 #include "ipc.h"
 #include "ui/index.html.h"
 #include "ui/favicon_ico.h"
@@ -268,7 +267,6 @@ static void appendLocalStatus(JsonObject obj) {
     obj["heap_free"] = heap_caps_get_free_size(MALLOC_CAP_8BIT);
     obj["uptime_ms"] = millis();
     obj["ws_connected"] = wsClientIsConnected();
-    obj["mqtt_connected"] = mqttClientIsConnected();
     obj["wifi_rssi"] = WiFi.RSSI();
     obj["mesh_peers"] = meshPeerCount();
     obj["setup_mode"] = setupModeActive;
@@ -307,7 +305,6 @@ static void mergePeerStatus(JsonObject obj, JsonObjectConst status) {
     if (status["heap_free"].is<unsigned long>() || status["heap_free"].is<int>()) obj["heap_free"] = status["heap_free"];
     if (status["uptime_ms"].is<unsigned long>() || status["uptime_ms"].is<int>()) obj["uptime_ms"] = status["uptime_ms"];
     if (status["ws_connected"].is<bool>()) obj["ws_connected"] = status["ws_connected"];
-    if (status["mqtt_connected"].is<bool>()) obj["mqtt_connected"] = status["mqtt_connected"];
     if (status["wifi_rssi"].is<int>()) obj["wifi_rssi"] = status["wifi_rssi"];
     if (status["mesh_peers"].is<int>()) obj["mesh_peers"] = status["mesh_peers"];
     if (status["setup_mode"].is<bool>()) obj["setup_mode"] = status["setup_mode"];
@@ -620,14 +617,6 @@ static void handleElkApi() {
       "methods": {
         "get": {"args": ["url"], "ret": "{status,body}", "desc": "HTTP GET, blocks until response"},
         "post": {"args": ["url","contentType","body"], "ret": "{status,body}", "desc": "HTTP POST"}
-      }
-    },
-    "mqtt": {
-      "methods": {
-        "publish": {"args": ["topic","payload"], "desc": "Publish MQTT message"},
-        "subscribe": {"args": ["topic"], "desc": "Subscribe to topic"},
-        "receive": {"args": [], "ret": "{topic,payload}|\"\"", "desc": "Non-blocking receive"},
-        "connected": {"args": [], "ret": "0|1", "desc": "MQTT connection status"}
       }
     },
     "sys": {

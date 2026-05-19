@@ -13,7 +13,6 @@
 #include "board.h"
 #include "display_utils.h"
 #include "ipc.h"
-#include "mqtt_client.h"
 
 // ─── Elk memory arena ───────────────────────────────────────────────────────
 static uint8_t elkMem[ELK_MEM_SIZE];
@@ -407,70 +406,6 @@ static jsval_t js_httpPost(struct js *js, jsval_t *args, int nargs) {
     return obj;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  MQTT bindings (cross-core IPC to Core 0 MQTT client)
-// ═══════════════════════════════════════════════════════════════════════════
-
-static jsval_t js_mqttPublish(struct js *js, jsval_t *args, int nargs) {
-    if (!js_chkargs(args, nargs, "ss")) return js_mkerr(js, "mqtt.publish(topic,payload)");
-    size_t tLen, pLen;
-    char *topic   = js_getstr(js, args[0], &tLen);
-    char *payload = js_getstr(js, args[1], &pLen);
-    if (!topic || tLen >= MQTT_TOPIC_MAX)     return js_mkerr(js, "bad topic");
-    if (!payload || pLen >= MQTT_PAYLOAD_MAX) return js_mkerr(js, "payload too large");
-    if (!g_mqttOutQueue)                     return js_mkerr(js, "mqtt not ready");
-
-    MqttCommand* cmd = (MqttCommand*)malloc(sizeof(MqttCommand));
-    if (!cmd) return js_mkerr(js, "out of memory");
-    cmd->type = MQTT_CMD_PUBLISH;
-    memcpy(cmd->topic, topic, tLen);     cmd->topic[tLen] = '\0';
-    memcpy(cmd->payload, payload, pLen); cmd->payload[pLen] = '\0';
-    cmd->payloadLen = pLen;
-
-    if (xQueueSend(g_mqttOutQueue, &cmd, pdMS_TO_TICKS(500)) != pdTRUE) {
-        free(cmd);
-        return js_mkerr(js, "mqtt queue full");
-    }
-    return js_mkundef();
-}
-
-static jsval_t js_mqttSubscribe(struct js *js, jsval_t *args, int nargs) {
-    if (!js_chkargs(args, nargs, "s")) return js_mkerr(js, "mqtt.subscribe(topic)");
-    size_t tLen;
-    char *topic = js_getstr(js, args[0], &tLen);
-    if (!topic || tLen >= MQTT_TOPIC_MAX) return js_mkerr(js, "bad topic");
-    if (!g_mqttOutQueue)                 return js_mkerr(js, "mqtt not ready");
-
-    MqttCommand* cmd = (MqttCommand*)malloc(sizeof(MqttCommand));
-    if (!cmd) return js_mkerr(js, "out of memory");
-    cmd->type = MQTT_CMD_SUBSCRIBE;
-    memcpy(cmd->topic, topic, tLen); cmd->topic[tLen] = '\0';
-    cmd->payloadLen = 0;
-
-    if (xQueueSend(g_mqttOutQueue, &cmd, pdMS_TO_TICKS(500)) != pdTRUE) {
-        free(cmd);
-        return js_mkerr(js, "mqtt queue full");
-    }
-    return js_mkundef();
-}
-
-static jsval_t js_mqttReceive(struct js *js, jsval_t *, int) {
-    if (!g_mqttInQueue) return js_mkstr(js, "", 0);
-
-    MqttMessage* msg = nullptr;
-    if (xQueueReceive(g_mqttInQueue, &msg, 0) != pdTRUE || !msg)
-        return js_mkstr(js, "", 0);
-
-    jsval_t obj = js_mkobj(js);
-    js_set(js, obj, "topic",   js_mkstr(js, msg->topic, strlen(msg->topic)));
-    js_set(js, obj, "payload", js_mkstr(js, msg->payload, msg->payloadLen));
-    free(msg);
-    return obj;
-}
-
-static jsval_t js_mqttIsConnected(struct js *js, jsval_t *, int) {
-    return js_mknum(mqttClientIsConnected() ? 1 : 0);
-}
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  JSON bindings
@@ -708,13 +643,6 @@ void elkEngineCreate() {
     js_set(jsEngine, http, "get",  js_mkfun(js_httpGet));
     js_set(jsEngine, http, "post", js_mkfun(js_httpPost));
 
-    // mqtt.* object
-    jsval_t mqtt = js_mkobj(jsEngine);
-    js_set(jsEngine, glob, "mqtt", mqtt);
-    js_set(jsEngine, mqtt, "publish",   js_mkfun(js_mqttPublish));
-    js_set(jsEngine, mqtt, "subscribe", js_mkfun(js_mqttSubscribe));
-    js_set(jsEngine, mqtt, "receive",   js_mkfun(js_mqttReceive));
-    js_set(jsEngine, mqtt, "connected", js_mkfun(js_mqttIsConnected));
 
     // JSON object
     jsval_t jsonObj = js_mkobj(jsEngine);
