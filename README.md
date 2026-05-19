@@ -8,8 +8,6 @@ Multiple Kairos devices on the same network discover each other automatically vi
 ESP-NOW and form a mesh, allowing scripts to be run or saved to any peer from a
 single browser tab.
 
-> Inspired by the [famiglia-ink](https://github.com/paperdink) project.
-
 ---
 
 ## Architecture
